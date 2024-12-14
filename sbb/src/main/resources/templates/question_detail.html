@@ -1,0 +1,191 @@
+<html layout:decorate="~{layout}">
+<div layout:fragment="content" class="container my-3">
+
+
+	<!-- 질문 제목 -->
+	<h2 class="border-bottom py-2" th:text="${question.subject}"></h2>
+
+	<div class="card my-3">
+		<div class="card-body">
+
+			<!-- 질문 본문 -->
+			<div class="card-text" style="white-space: pre-line;" th:text="${question.content}"></div>
+
+			<!-- 작성자 정보 및 작성 시간 -->
+			<div class="d-flex justify-content-end">
+
+				<!-- 수정 시간 -->
+				<div th:if="${question.lastModified != null}" class="badge bg-light text-dark p-2 text-start mx-3">
+
+					<div class="mb-2">modified at</div>
+					<div th:text="${#temporals.format(question.lastModified, 'yyyy-MM-dd HH:mm')}"></div>
+
+				</div>
+
+				<div class="badge bg-light text-dark p-2 text-start">
+
+					<!-- 작성자 이름 : 글쓴이 -->
+					<div class="mb-2">
+						<span th:if="${question.author != null}" th:text="${question.author.userName}"></span>
+					</div>
+
+					<!-- 작성 시간 -->
+					<div th:text="${#temporals.format(question.createDate, 'yyyy-MM-dd HH:mm')}"></div>
+
+				</div>
+			</div>
+
+			<div class="my-3">
+
+				<!-- 질문 추천 -->
+				<a href="javascript:void(0);" class="recommend btn btn-sm btn-outline-secondary"
+					th:data-uri="@{|/question/vote/${question.id}|}">
+					개추
+					<span class="badge rounded-pill bg-success" th:text="${#lists.size(question.voter)}">
+					</span>
+				</a>
+
+				<!-- 질문 수정 -->
+				<a th:href="@{|/question/modify/${question.id}|}" class="btn btn-sm btn-outline-seconday"
+					sec:authorize="isAuthenticated()"
+					th:if="${question.author != null and #authentication.getPrincipal().getUsername() == question.author.userName}"
+					th:text="수정">
+				</a>
+
+				<!-- 질문 삭제 -->
+				<!--  버튼을 클릭했을 때 ‘정말로 삭제하시겠습니까?’와 같은 메시지와 함께 별도의 확인 절차를 중간에 끼워 넣기 위해서 -->
+				<a href="javascript:void(0);" th:data-uri="@{|/question/delete/${question.id}|}"
+					class="delete btn btn-sm btn-outline-secondary" sec:authorize="isAuthenticated()"
+					th:if="${question.author != null and #authentication.getPrincipal.getUsername() == question.author.userName}"
+					th:text="삭제">
+				</a>
+
+			</div>
+
+
+
+		</div>
+	</div>
+
+
+
+	<!-- 답변의 개수 표시 -->
+	<h5 class="border-bottom my-3 py-2" th:text="|${#lists.size(question.answerList)}개의 답변이 있습니다.|"></h5>
+
+
+
+	<!-- 답변 반복 시작 -->
+
+	<!-- 답변 목록을 하나씩 가져와 반복하여 카드 형식으로 보여줌 -->
+	<!-- question.answerList에 있는 각 답변을 반복 -->
+	<!-- answer 변수는 각 반복에서의 개별 답변 객체 -->
+	<div class="card my-3" th:each="answer : ${question.answerList}">
+		
+		<!-- 앵커기능 : 동일한 페이지 내에서 특정 위치로 스크롤 -->
+		<a th:id="|answer_${answer.id}|"></a>
+		
+		<div class="card-body">
+
+			<!-- 답변 본문 -->
+			<div class="card-text" style="white-space: pre-line;" th:text="${answer.content}"></div>
+
+			<!-- 답변 작성자 & 날짜 뱃지 -->
+			<div class="d-flex justify-content-end">
+
+				<!-- 수정 날짜 -->
+				<div th:if="${answer.lastModified != null}" class="badge bg-light text-dark p-2 text-start mx-3">
+					<div class="mb-2">modified at</div>
+					<div th:text="${#temporals.format(answer.lastModified, 'yyyy-MM-dd HH:mm')}"></div>
+				</div>
+
+				<div class="badge bg-light text-dark p-2 text-start">
+					<!-- 답변 작성자 -->
+					<div class="mb-2">
+						<span th:if="${answer.author != null}" th:text="${answer.author.userName}"></span>
+					</div>
+					<!-- 답변 날짜 -->
+					<div th:text="${#temporals.format(answer.createDate, 'yyyy-MM-dd HH:mm')}"></div>
+
+				</div>
+			</div>
+
+			<div class="my-3">
+
+				<!-- 답변 추천 -->
+				<a href="javascript:void(0);" class="recommend btn btn-sm btn-outline-secondary"
+				   th:data-uri="@{|/answer/vote/${answer.id}|}">
+				   개추
+				   <span class="badge rounded-pill bg-success" th:text="${#lists.size(answer.voter)}"></span>
+				</a>
+							
+				<!-- 답변 수정 -->
+				<a th:href="@{|/answer/modify/${answer.id}|}" class="btn btn-sm btn-outline-secondary"
+					sec:authorize="isAuthenticated()"
+					th:if="${answer.author != null and #authentication.getPrincipal().getUsername() == answer.author.userName}"
+					th:text="수정">
+				</a>
+
+				<!-- 답변 삭제 -->
+				<a href="javascript:void(0);" th:data-uri="@{|/answer/delete/${answer.id}|}"
+					class="delete btn btn-sm btn-outline-secondary" sec:authorize="isAuthenticated()"
+					th:if="${answer.author != null and #authentication.getPrincipal().getUsername() == answer.author.userName}"
+					th:text="삭제"></a>
+
+			</div>
+
+		</div>
+	</div>
+	<!-- 답변 반복 끝 -->
+
+
+
+	<!-- 답변 작성 폼 -->
+
+	<!--              폼이 제출될 때 요청이 전송될 URL 경로를 정의 / 폼에서 사용할 데이터 객체를 지정 / HTTP POST 요청으로 데이터를 전송 -->
+	<form th:action="@{|/answer/create/${question.id}|}" th:object="${answerForm}" method="post" class="my-3">
+
+		<!-- 폼 에러 처리 -->
+		<div th:replace="~{form_errors :: formErrorsFragment}"></div>
+
+		<!-- 로그인하지 않은 사용자일 경우 답변 작성 비활성화 / answerForm 객체의 content 필드와 연결-->
+
+		<!-- "sec:authorize" : Spring Security의 sec:authorize 속성을 사용 -->
+		<textarea sec:authorize="isAnonymous()" disabled th:field="*{content}" class="form-control"
+			rows="10"></textarea>
+		<!-- 로그인한 사용자일 경우 답변 작성 가능 -->
+		<textarea sec:authorize="isAuthenticated()" th:field="*{content}" class="form-control" rows="10"></textarea>
+
+		<!-- 답변 등록 버튼 -->
+
+		<!-- type="submit": 이 버튼을 클릭하면 폼이 제출 -->
+		<input type="submit" value="딥변등록" class="btn btn-primary my-2">
+
+	</form>
+
+</div>
+
+<script layout:fragment="script" type='text/javascript'>
+
+	const delete_elements = document.getElementsByClassName("delete");
+
+	Array.from(delete_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			if (confirm("정말로 삭제할거임?")) {
+				location.href = this.dataset.uri;
+			};
+		});
+	});
+
+	const recommend_elements = document.getElementsByClassName("recommend");
+
+	Array.from(recommend_elements).forEach(function (element) {
+		element.addEventListener('click', function () {
+			if (confirm("정말로 추천하시겠습니까?")) {
+				location.href = this.dataset.uri;
+			};
+		});
+	});
+
+</script>
+
+</html>
